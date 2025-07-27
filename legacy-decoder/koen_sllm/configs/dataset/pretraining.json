@@ -1,23 +1,64 @@
 {
-  "description": "사전훈련용 데이터셋 설정",
+  "description": "사전훈련용 데이터셋 설정 - RecommendDataset.md 레시피 1 기반",
+  "version": "2.0",
+  "strategy": "commercial_ready_permissive_license",
   "korean_config": "korean_datasets.json",
   "english_config": "english_datasets.json",
   "mixing_ratio": {
-    "korean": 0.5,
-    "english": 0.5
+    "korean": 0.7,
+    "english": 0.3,
+    "rationale": "한국어 중심 학습: 한국어 70%, 영어 30% (사용자 요청 반영)",
+    "total_target_size_gb": 100
+  },
+  "data_quality": {
+    "deduplication": {
+      "enabled": true,
+      "method": "LSH",
+      "description": "OpenWebText 구축에 사용된 LSH 기법으로 중복 제거"
+    },
+    "quality_filtering": {
+      "enabled": true,
+      "min_sentences": 3,
+      "max_repetition_ratio": 0.3,
+      "remove_html_tags": true,
+      "description": "C4 데이터셋 정제 과정에서 영감을 받은 품질 필터링"
+    }
+  },
+  "tokenizer": {
+    "type": "SentencePiece_BPE",
+    "vocab_size": 65536,
+    "vocab_size_range": {
+      "min": 50000,
+      "max": 100000
+    },
+    "description": "이중 언어 어휘집, 언어적 표현력과 GPU 메모리 효율성 균형"
   },
   "preprocessing": {
     "max_sequence_length": 2048,
     "min_sequence_length": 10,
     "document_separator": "<|endoftext|>",
     "remove_empty_lines": true,
-    "normalize_whitespace": true
+    "normalize_whitespace": true,
+    "chunk_size": 1024,
+    "overlap": 128
   },
   "data_loader": {
     "shuffle": true,
     "drop_last": true,
     "pin_memory": true,
-    "num_workers": 24
+    "num_workers": 24,
+    "batch_size": 16,
+    "effective_batch_size": 512
   },
-  "validation_split": 0.01
+  "validation_split": 0.01,
+  "license_tracking": {
+    "enabled": true,
+    "output_file": "dataset_license_manifest.json",
+    "description": "연구 재현성 및 향후 실사(due diligence) 대비"
+  },
+  "recommendations": {
+    "target_compute": "50-200GB 규모, 수천 GPU-hour 수준",
+    "model_size_target": "소규모 언어 모델(SLM) - 수백만~수십억 파라미터",
+    "focus": "데이터 품질 > 데이터 양, 허용적 라이선스 우선"
+  }
 } 

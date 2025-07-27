@@ -312,6 +312,7 @@ zsdoc/data
 
 outputs/
 datasets/
+raw_datasets/
 models/
 logs/
 *.pt

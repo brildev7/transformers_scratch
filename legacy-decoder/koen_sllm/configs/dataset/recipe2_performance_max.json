@@ -1,0 +1,159 @@
+{
+  "name": "레시피 2: 연구 성능 극대화",
+  "description": "데이터 규모와 다양성을 최대화하여 벤치마크 성능 극대화",
+  "version": "1.0",
+  "strategy": "research_performance_maximization",
+  "total_target_size_gb": 150,
+  "license_philosophy": "순수 학술 연구 목적, 일부 상업적 제약 감수",
+  
+  "korean_component": {
+    "target_size_gb": 75,
+    "datasets": [
+      {
+        "name": "lcw99/wikipedia-korean",
+        "size_gb": 2,
+        "license": "Apache-2.0",
+        "priority": 1,
+        "description": "고품질 백과사전 텍스트"
+      },
+      {
+        "name": "AI-Hub/초거대AI 데이터",
+        "size_gb": 16,
+        "license": "research_restricted",
+        "priority": 2,
+        "description": "20억 어절 대규모 한국어 말뭉치",
+        "restrictions": "상업적 이용 시 원 수행기관과 별도 협의 필요"
+      },
+      {
+        "name": "kowikitext",
+        "size_gb": 1.7,
+        "license": "CC-BY-SA-3.0",
+        "priority": 3,
+        "description": "정제된 위키 텍스트"
+      },
+      {
+        "name": "korean_news_data",
+        "size_gb": 0.5,
+        "license": "research_friendly",
+        "priority": 4,
+        "description": "한국어 뉴스 및 기사 데이터"
+      },
+      {
+        "name": "korean_common_crawl",
+        "size_gb": 54.8,
+        "license": "CC-BY",
+        "priority": 5,
+        "description": "한국어 웹 크롤링 데이터 (대규모)",
+        "note": "성능 극대화를 위한 대용량 한국어 웹 데이터"
+      }
+    ]
+  },
+  
+  "english_component": {
+    "target_size_gb": 75,
+    "datasets": [
+      {
+        "name": "The Pile/OpenWebText2",
+        "size_gb": 30,
+        "license": "permissive",
+        "priority": 1,
+        "description": "고품질 웹 텍스트"
+      },
+      {
+        "name": "The Pile/arXiv",
+        "size_gb": 30,
+        "license": "CC-BY",
+        "priority": 2,
+        "description": "학술 논문, 연구 및 기술 지식"
+      },
+      {
+        "name": "BookCorpus",
+        "size_gb": 5,
+        "license": "research_community",
+        "priority": 3,
+        "description": "미출간 소설, 서사 구조 학습"
+      },
+      {
+        "name": "C4/realnewslike",
+        "size_gb": 10,
+        "license": "ODC-BY",
+        "priority": 4,
+        "description": "뉴스 스타일 정제된 웹 텍스트"
+      }
+    ]
+  },
+  
+  "additional_pile_components": {
+    "description": "The Pile에서 추가 선택 가능한 구성요소들",
+    "available": [
+      {
+        "name": "PubMed Central",
+        "size_gb": 96.93,
+        "license": "permissive",
+        "description": "생물의학 분야 학술 자료"
+      },
+      {
+        "name": "Stack Exchange",
+        "size_gb": 34.57,
+        "license": "CC-BY-SA",
+        "description": "Q&A 형식의 전문 지식"
+      },
+      {
+        "name": "Wikipedia (en)",
+        "size_gb": 6.85,
+        "license": "CC-BY-SA",
+        "description": "백과사전적 지식"
+      }
+    ]
+  },
+  
+  "still_excluded_for_safety": [
+    {
+      "name": "The Pile/Books3",
+      "reason": "저작권 침해 위험, DMCA 삭제 요청 대상",
+      "risk_level": "critical",
+      "note": "성능 극대화 전략에서도 법적 위험은 회피"
+    }
+  ],
+  
+  "preprocessing_requirements": {
+    "deduplication": {
+      "method": "LSH",
+      "description": "대규모 데이터에서 중복 제거 필수"
+    },
+    "quality_filtering": {
+      "method": "C4_inspired_relaxed",
+      "min_sentences": 2,
+      "max_repetition_ratio": 0.4,
+      "note": "성능 극대화를 위해 필터링 기준 완화"
+    },
+    "tokenizer": {
+      "type": "SentencePiece_BPE",
+      "vocab_size": 65536,
+      "bilateral_language": true,
+      "extended_vocab": true
+    }
+  },
+  
+  "target_outcomes": {
+    "compute_budget": "수만 GPU-hour 수준",
+    "model_parameters": "수십억~수백억",
+    "benchmark_performance": "최대화",
+    "commercial_freedom": "제한적 (AI-Hub 제약)",
+    "research_flexibility": "최대화"
+  },
+  
+  "license_summary": {
+    "mixed_licensing": true,
+    "commercial_use_restricted": true,
+    "research_use_unrestricted": true,
+    "ai_hub_compliance_required": true,
+    "due_diligence_complexity": "high"
+  },
+  
+  "warnings": {
+    "commercial_use": "AI-Hub 데이터로 인한 상업적 활용 제약",
+    "legal_complexity": "다양한 라이선스 조건 관리 필요",
+    "compute_requirements": "대규모 계산 자원 필요"
+  }
+} 

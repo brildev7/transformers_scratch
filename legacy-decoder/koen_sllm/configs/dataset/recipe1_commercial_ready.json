@@ -1,0 +1,123 @@
+{
+  "name": "레시피 1: 상용화 대비 및 민첩성 중심",
+  "description": "허용적 라이선스 중심의 소규모 연구소 최적화 데이터셋 구성",
+  "version": "1.0",
+  "strategy": "commercial_ready_permissive_license",
+  "total_target_size_gb": 75,
+  "license_philosophy": "법적 리스크 최소화 및 미래 상업화 옵션 확보",
+  
+  "korean_component": {
+    "target_size_gb": 37.5,
+    "datasets": [
+      {
+        "name": "lcw99/wikipedia-korean",
+        "size_gb": 2,
+        "license": "Apache-2.0",
+        "priority": 1,
+        "description": "고품질 백과사전 텍스트"
+      },
+      {
+        "name": "kowikitext",
+        "size_gb": 1.7,
+        "license": "CC-BY-SA-3.0",
+        "priority": 2,
+        "description": "정제된 위키 텍스트"
+      },
+      {
+        "name": "korean_news_data",
+        "size_gb": 0.5,
+        "license": "research_friendly",
+        "priority": 3,
+        "description": "한국어 뉴스 및 기사 데이터"
+      },
+      {
+        "name": "korean_common_crawl",
+        "size_gb": 33.3,
+        "license": "CC-BY",
+        "priority": 4,
+        "description": "한국어 웹 크롤링 데이터 (품질 필터링 적용)",
+        "note": "상업적 안전한 한국어 웹 데이터"
+      }
+    ]
+  },
+  
+  "english_component": {
+    "target_size_gb": 37.5,
+    "datasets": [
+      {
+        "name": "C4/realnewslike",
+        "size_gb": 15,
+        "license": "ODC-BY",
+        "priority": 1,
+        "description": "뉴스 스타일 정제된 웹 텍스트"
+      },
+      {
+        "name": "Skylion007/openwebtext",
+        "size_gb": 15,
+        "license": "CC0",
+        "priority": 2,
+        "description": "Reddit 추천 기반 고품질 웹 텍스트"
+      },
+      {
+        "name": "BookCorpus",
+        "size_gb": 5,
+        "license": "research_community",
+        "priority": 3,
+        "description": "미출간 소설, 서사 구조 학습"
+      },
+      {
+        "name": "The Pile/Gutenberg (PG-19)",
+        "size_gb": 2.5,
+        "license": "Public Domain",
+        "priority": 4,
+        "description": "저작권 만료 고서"
+      }
+    ]
+  },
+  
+  "excluded_for_legal_safety": [
+    {
+      "name": "AI-Hub 데이터",
+      "reason": "상업적 이용 시 원 수행기관과 별도 협의 필요",
+      "risk_level": "high"
+    },
+    {
+      "name": "The Pile/Books3",
+      "reason": "저작권 침해 위험, DMCA 삭제 요청 대상",
+      "risk_level": "critical"
+    }
+  ],
+  
+  "preprocessing_requirements": {
+    "deduplication": {
+      "method": "LSH",
+      "description": "OpenWebText 구축 기법 사용"
+    },
+    "quality_filtering": {
+      "method": "C4_inspired",
+      "min_sentences": 3,
+      "max_repetition_ratio": 0.3
+    },
+    "tokenizer": {
+      "type": "SentencePiece_BPE",
+      "vocab_size": 65536,
+      "bilateral_language": true
+    }
+  },
+  
+  "target_outcomes": {
+    "compute_budget": "수천 GPU-hour 수준",
+    "model_parameters": "수백만~수십억",
+    "commercial_freedom": "완전 자유",
+    "legal_risk": "최소화",
+    "development_agility": "최대화"
+  },
+  
+  "license_summary": {
+    "all_commercial_use": true,
+    "attribution_required": true,
+    "share_alike_components": ["wikipedia", "kowikitext"],
+    "public_domain_components": ["gutenberg"],
+    "cc0_components": ["openwebtext"]
+  }
+} 
