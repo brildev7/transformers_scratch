@@ -1,0 +1,29 @@
+{
+  "description": "대형 모델 (1B+ parameters) 훈련 설정",
+  "vocab_size": 50000,
+  "d_model": 1024,
+  "n_heads": 16,
+  "n_layers": 24,
+  "d_ff": 4096,
+  "max_seq_len": 2048,
+  "dropout": 0.1,
+  
+  "learning_rate": 0.00005,
+  "batch_size": 4,
+  "grad_accumulation_steps": 16,
+  "max_steps": 200000,
+  "warmup_steps": 4000,
+  "save_steps": 2000,
+  "eval_steps": 1000,
+  
+  "train_data_path": "dataset/train",
+  "val_data_path": "dataset/val",
+  "tokenizer_path": "dataset/tokenizer",
+  
+  "world_size": 8,
+  "local_rank": 0,
+  "seed": 42,
+  "fp16": true,
+  "gradient_checkpointing": true,
+  "deepspeed_config": "configs/training/deepspeed_large.json"
+} 

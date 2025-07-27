@@ -1,0 +1,17 @@
+[
+  {
+    "instruction": "다음 텍스트를 요약해주세요.",
+    "input": "인공지능은 인간의 지능을 모방하여 학습, 추론, 판단 등의 기능을 수행하는 기술입니다. 최근 딥러닝과 머신러닝의 발전으로 다양한 분야에서 활용되고 있습니다.",
+    "output": "인공지능은 인간의 지능을 모방한 기술로, 딥러닝과 머신러닝 발전에 따라 다양한 분야에서 활용되고 있습니다."
+  },
+  {
+    "instruction": "파이썬으로 간단한 계산기 함수를 만들어주세요.",
+    "input": "덧셈, 뺄셈, 곱셈, 나눗셈이 가능한 계산기",
+    "output": "```python\ndef calculator(a, b, operation):\n    if operation == '+':\n        return a + b\n    elif operation == '-':\n        return a - b\n    elif operation == '*':\n        return a * b\n    elif operation == '/':\n        return a / b if b != 0 else '0으로 나눌 수 없습니다'\n    else:\n        return '지원하지 않는 연산입니다'\n```"
+  },
+  {
+    "instruction": "다음 문장을 영어로 번역해주세요.",
+    "input": "오늘 날씨가 정말 좋네요.",
+    "output": "The weather is really nice today."
+  }
+]

@@ -1,0 +1,97 @@
+{
+  "description": "한국어 데이터셋 설정 파일",
+  "version": "1.1",
+  "datasets": [
+    {
+      "name": "lcw99/wikipedia-korean-20240501",
+      "config": null,
+      "split": "train",
+      "description": "한국어 위키피디아 (2024년 최신)",
+      "text_field": "text",
+      "limits": {
+        "small": 50000,
+        "full": 500000
+      },
+      "min_text_length": 100,
+      "max_text_length": 2000,
+      "streaming": false,
+      "enabled": true,
+      "priority": 1
+    },
+    {
+      "name": "klue",
+      "config": "ynat",
+      "split": "train",
+      "description": "KLUE 뉴스 분류 데이터",
+      "text_field": "title",
+      "limits": {
+        "small": 50000,
+        "full": 100000
+      },
+      "min_text_length": 10,
+      "max_text_length": 2000,
+      "streaming": false,
+      "enabled": true,
+      "priority": 2
+    },
+    {
+      "name": "maywell/ko_wikitext_103",
+      "config": null,
+      "split": "train",
+      "description": "한국어 위키텍스트",
+      "text_field": "text",
+      "limits": {
+        "small": 50000,
+        "full": 200000
+      },
+      "min_text_length": 100,
+      "max_text_length": 2000,
+      "streaming": false,
+      "enabled": true,
+      "priority": 3
+    },
+    {
+      "name": "squad_kor_v1",
+      "config": null,
+      "split": "train",
+      "description": "한국어 SQuAD 질의응답",
+      "text_field": "context",
+      "limits": {
+        "small": 50000,
+        "full": 100000
+      },
+      "min_text_length": 50,
+      "max_text_length": 2000,
+      "streaming": false,
+      "enabled": true,
+      "priority": 4,
+      "fallback": {
+        "description": "SQuAD 데이터 로드 실패 시 추가 KLUE 데이터 사용",
+        "action": "skip"
+      }
+    },
+    {
+      "name": "kor_nli",
+      "config": null,
+      "split": "train",
+      "description": "한국어 자연어 추론",
+      "text_field": "premise",
+      "limits": {
+        "small": 30000,
+        "full": 60000
+      },
+      "min_text_length": 20,
+      "max_text_length": 2000,
+      "streaming": false,
+      "enabled": true,
+      "priority": 5,
+      "note": "자연어 추론 데이터셋"
+    }
+  ],
+  "global_settings": {
+    "cache_dir": "datasets/cache",
+    "output_filename": "korean_pretraining_corpus.json",
+    "encoding": "utf-8",
+    "json_indent": 2
+  }
+} 

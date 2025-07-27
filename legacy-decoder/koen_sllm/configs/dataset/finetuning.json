@@ -1,0 +1,31 @@
+{
+  "description": "파인튜닝용 데이터셋 설정",
+  "task_type": "instruction_following",
+  "datasets": [
+    {
+      "name": "korean_instruction",
+      "path": "../../../../datasets/korean_instructions.json",
+      "format": "alpaca",
+      "weight": 1.0
+    },
+    {
+      "name": "english_instruction", 
+      "path": "../../../../datasets/english_instructions.json",
+      "format": "alpaca",
+      "weight": 1.0
+    }
+  ],
+  "preprocessing": {
+    "max_sequence_length": 2048,
+    "prompt_template": "### 지시사항:\n{instruction}\n\n### 응답:\n{output}",
+    "truncation_strategy": "right",
+    "padding": "max_length"
+  },
+  "data_loader": {
+    "shuffle": true,
+    "drop_last": false,
+    "pin_memory": true,
+    "num_workers": 2
+  },
+  "validation_split": 0.05
+} 

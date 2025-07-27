@@ -1,0 +1,23 @@
+{
+  "description": "사전훈련용 데이터셋 설정",
+  "korean_config": "korean_datasets.json",
+  "english_config": "english_datasets.json",
+  "mixing_ratio": {
+    "korean": 0.5,
+    "english": 0.5
+  },
+  "preprocessing": {
+    "max_sequence_length": 2048,
+    "min_sequence_length": 10,
+    "document_separator": "<|endoftext|>",
+    "remove_empty_lines": true,
+    "normalize_whitespace": true
+  },
+  "data_loader": {
+    "shuffle": true,
+    "drop_last": true,
+    "pin_memory": true,
+    "num_workers": 24
+  },
+  "validation_split": 0.01
+} 

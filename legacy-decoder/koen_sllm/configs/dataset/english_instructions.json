@@ -1,0 +1,17 @@
+[
+  {
+    "instruction": "Explain what machine learning is in simple terms.",
+    "input": "",
+    "output": "Machine learning is a type of artificial intelligence that allows computers to learn and make decisions from data without being explicitly programmed for every task."
+  },
+  {
+    "instruction": "Write a Python function to check if a number is prime.",
+    "input": "",
+    "output": "```python\ndef is_prime(n):\n    if n < 2:\n        return False\n    for i in range(2, int(n**0.5) + 1):\n        if n % i == 0:\n            return False\n    return True\n```"
+  },
+  {
+    "instruction": "Translate the following sentence to Korean.",
+    "input": "I love learning new languages.",
+    "output": "저는 새로운 언어를 배우는 것을 좋아합니다."
+  }
+]

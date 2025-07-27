@@ -1,0 +1,128 @@
+{
+  "description": "영어 데이터셋 설정 파일",
+  "version": "1.1",
+  "datasets": [
+    {
+      "name": "wikitext",
+      "config": "wikitext-103-v1",
+      "split": "train",
+      "description": "WikiText-103 영어 텍스트",
+      "text_field": "text",
+      "limits": {
+        "small": 50000,
+        "full": 200000
+      },
+      "min_text_length": 100,
+      "max_text_length": 2000,
+      "streaming": false,
+      "enabled": true,
+      "priority": 1
+    },
+    {
+      "name": "allenai/c4",
+      "config": "realnewslike",
+      "split": "train",
+      "description": "C4 뉴스형 텍스트",
+      "text_field": "text",
+      "limits": {
+        "small": 30000,
+        "full": 100000
+      },
+      "min_text_length": 200,
+      "max_text_length": 2000,
+      "streaming": true,
+      "enabled": true,
+      "priority": 2,
+      "fallback": {
+        "description": "C4 로드 실패 시 다른 데이터셋 사용",
+        "action": "continue"
+      }
+    },
+    {
+      "name": "togethercomputer/RedPajama-Data-1T-Sample",
+      "config": null,
+      "split": "train",
+      "description": "RedPajama 웹 텍스트 샘플",
+      "text_field": "text",
+      "limits": {
+        "small": 50000,
+        "full": 150000
+      },
+      "min_text_length": 200,
+      "max_text_length": 2000,
+      "streaming": false,
+      "enabled": true,
+      "priority": 3,
+      "fallback": {
+        "description": "RedPajama 로드 실패 시 추가 WikiText 사용",
+        "action": "continue"
+      }
+    },
+    {
+      "name": "cnn_dailymail",
+      "config": "3.0.0",
+      "split": "train",
+      "description": "CNN/DailyMail 뉴스 요약",
+      "text_field": "article",
+      "limits": {
+        "small": 50000,
+        "full": 100000
+      },
+      "min_text_length": 150,
+      "max_text_length": 2000,
+      "streaming": false,
+      "enabled": true,
+      "priority": 4,
+      "fallback": {
+        "description": "CNN/DailyMail 로드 실패 시 스킵",
+        "action": "skip"
+      }
+    },
+    {
+      "name": "arxiv_dataset",
+      "config": null,
+      "split": "train",
+      "description": "ArXiv 논문 요약",
+      "text_field": "abstract",
+      "limits": {
+        "small": 30000,
+        "full": 80000
+      },
+      "min_text_length": 100,
+      "max_text_length": 2000,
+      "streaming": false,
+      "enabled": true,
+      "priority": 5,
+      "fallback": {
+        "description": "ArXiv 데이터 로드 실패 시 스킵",
+        "action": "skip"
+      }
+    },
+    {
+      "name": "squad",
+      "config": null,
+      "split": "train",
+      "description": "SQuAD 영어 질의응답",
+      "text_field": "context",
+      "limits": {
+        "small": 50000,
+        "full": 100000
+      },
+      "min_text_length": 50,
+      "max_text_length": 2000,
+      "streaming": false,
+      "enabled": true,
+      "priority": 6,
+      "fallback": {
+        "description": "SQuAD 데이터 로드 실패 시 스킵",
+        "action": "skip"
+      }
+    }
+  ],
+  "global_settings": {
+    "cache_dir": "datasets/cache",
+    "output_filename": "english_pretraining_corpus.json",
+    "encoding": "utf-8",
+    "json_indent": 2
+  }
+} 
