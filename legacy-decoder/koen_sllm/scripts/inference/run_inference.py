@@ -10,11 +10,10 @@ import os
 import argparse
 from pathlib import Path
 
-# 현재 디렉토리를 Python 경로에 추가
-current_dir = Path(__file__).parent.parent
+# 절대 경로로 모듈 임포트 (현재 디렉토리 기준)
+current_dir = Path(__file__).parent
 sys.path.insert(0, str(current_dir))
-
-from inference.console_app import main as console_main
+from console_app import main as console_main
 
 
 def print_banner():
@@ -39,7 +38,7 @@ def check_requirements():
     except ImportError as e:
         print(f"❌ 필수 패키지가 설치되지 않았습니다: {e}")
         print("다음 명령어로 설치하세요:")
-        print("pip install -r inference/requirements.txt")
+        print("pip install -r requirements.txt")
         sys.exit(1)
 
 
@@ -240,7 +239,11 @@ def main():
         "--device", args.device
     ]
     
-    if args.tokenizer:
+    # 개선된 토크나이저를 기본으로 사용
+    if not args.tokenizer:
+        sys.argv.extend(["--use-improved-tokenizer"])
+    
+    sys.argv.extend([
         sys.argv.extend(["--tokenizer", args.tokenizer])
     
     try:

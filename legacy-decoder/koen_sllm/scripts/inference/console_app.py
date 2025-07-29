@@ -10,7 +10,10 @@ from typing import List, Dict, Optional
 from datetime import datetime
 import readline  # 명령어 히스토리 지원
 
-from .inference_engine import InferenceEngine
+import sys
+import os
+sys.path.insert(0, os.path.dirname(__file__))
+from inference_engine import InferenceEngine
 
 
 class ConsoleApp:
@@ -26,11 +29,12 @@ class ConsoleApp:
         self.session_start_time = datetime.now()
         
         # 설정
-        self.max_length = 100
-        self.temperature = 0.9
+        # 설정 (텍스트 생성 최적화)
+        self.max_length = 150
+        self.temperature = 1.5  # 더 다양한 토큰 선택을 위해 상향 조정
         self.top_k = 50
-        self.top_p = 0.9
-        self.do_sample = True
+        self.top_p = 0.95  # 더 많은 토큰이 선택되도록 상향 조정
+        self.do_sample = True  # 샘플링 방식으로 변경
         
         print("=" * 60)
         print("🤖 한국어 소형 언어모델 대화형 콘솔")
@@ -307,12 +311,14 @@ class ConsoleApp:
                     # 일반 대화 처리
                     print("\n🤖 모델: ", end="", flush=True)
                     
+                    
                     response = self.engine.chat_generate(
                         message=user_input,
                         chat_history=self.chat_history,
                         max_length=self.max_length,
                         temperature=self.temperature
                     )
+                    
                     
                     print(response)
                     
@@ -345,11 +351,28 @@ class ConsoleApp:
 def main():
     """메인 함수"""
     parser = argparse.ArgumentParser(description="한국어 소형 언어모델 대화형 콘솔")
+    
     parser.add_argument(
-        "--checkpoint", 
-        type=str, 
+        "--checkpoint",
+        type=str,
         default="./outputs/checkpoint-12000",
         help="모델 체크포인트 경로"
+    )
+    
+    parser.add_argument(
+        "--use-legacy-model",
+        action="store_true",
+        help="기존 InferenceModel 사용 (기본값: 학습 호환 모델)"
+    )
+    parser.add_argument(
+        "--use-basic-tokenizer",
+        action="store_true",
+        help="기본 토크나이저 사용 (기본값: 개선된 토크나이저)"
+    )
+    parser.add_argument(
+        "--use-korean-tokenizer",
+        action="store_true",
+        help="한국어 토크나이저 사용 (형태소 분석 지원)"
     )
     parser.add_argument(
         "--tokenizer",
@@ -382,10 +405,25 @@ def main():
             sys.exit(1)
         
         # 추론 엔진 로드
+        use_training_compatible = not args.use_legacy_model  # 기본값: True
+        use_improved_tokenizer = not args.use_basic_tokenizer  # 기본값: True
+        use_korean_tokenizer = args.use_korean_tokenizer  # 기본값: False
+        
+        print(f"{"🔄 학습 호환 모드" if use_training_compatible else "📦 레거시 모델 모드"} 사용")
+        if use_korean_tokenizer:
+            print("🇰🇷 한국어 토크나이저 사용")
+        elif use_improved_tokenizer:
+            print("🚀 개선된 토크나이저 사용")
+        else:
+            print("📝 기본 토크나이저 사용")
+        
         engine = InferenceEngine.from_checkpoint(
             checkpoint_path=args.checkpoint,
             tokenizer_path=args.tokenizer,
-            device=args.device
+            device=args.device,
+            use_training_compatible=use_training_compatible,
+            use_improved_tokenizer=use_improved_tokenizer,
+            use_korean_tokenizer=use_korean_tokenizer
         )
         
         # 콘솔 앱 실행
