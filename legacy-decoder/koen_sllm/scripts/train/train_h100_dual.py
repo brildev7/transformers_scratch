@@ -33,6 +33,11 @@ script_dir = Path(__file__).parent.absolute()
 project_root = script_dir.parent.parent.parent.parent  # legacy-decoder/koen_sllm/scripts/train -> transformers_scratch
 sys.path.append(str(project_root))
 
+# 한국어 토크나이저 추가
+from korean_tokenizer import KoreanTokenizer
+from improved_korean_tokenizer import ImprovedKoreanTokenizer
+from gemma3_tokenizer import Gemma3TokenizerWrapper
+
 # 로깅 설정
 logging.basicConfig(
     level=logging.INFO, 
@@ -63,6 +68,9 @@ class TrainingConfig:
     # 데이터 설정
     dataset_path: str = "../../../../datasets"
     max_seq_length: int = 2048
+    
+    # 토크나이저 설정
+    tokenizer_type: str = "gemma3"  # 'korean', 'improved_korean', 'gemma3'
     
     # H100 최적화 설정
     use_flash_attention: bool = True
@@ -157,25 +165,81 @@ class SimpleTransformerModel(nn.Module):
         return {"loss": loss, "logits": logits}
 
 class TextDataset(Dataset):
-    """텍스트 데이터셋 클래스"""
+    """텍스트 데이터셋 클래스 (다양한 토크나이저 지원)"""
     
-    def __init__(self, data_path: str, max_length: int = 2048):
+    def __init__(self, data_path: str, max_length: int = 2048, tokenizer_type: str = "gemma3"):
+        """
+        Args:
+            data_path: 데이터 경로
+            max_length: 최대 시퀀스 길이
+            tokenizer_type: 토크나이저 타입 ('korean', 'improved_korean', 'gemma3')
+        """
         self.max_length = max_length
         self.data = []
+        self.tokenizer_type = tokenizer_type
+        
+        # 토크나이저 초기화
+        self._initialize_tokenizer()
         
         # JSONL 파일 로드
         data_file = Path(data_path) / "mixed_pretraining.jsonl"
         if not data_file.exists():
             logger.warning(f"데이터 파일이 없습니다: {data_file}")
-            # 더미 데이터 생성 (테스트용)
-            self.data = [{"text": f"안녕하세요 한국어 테스트 텍스트입니다. {i}"} for i in range(1000)]
+            # 더미 데이터 생성 (테스트용) - 한국어 문장들
+            korean_samples = [
+                "안녕하세요, 저는 한국어 언어모델입니다.",
+                "반갑습니다! 오늘 날씨가 정말 좋네요.",
+                "AI 모델이 한국어 텍스트를 잘 이해합니다.",
+                "자연어 처리는 매우 흥미로운 분야입니다.",
+                "머신러닝으로 언어를 학습할 수 있어요.",
+                "토크나이저가 문장을 분석합니다.",
+                "형태소 분석은 한국어에 중요해요.",
+                "딥러닝 모델을 학습시키고 있습니다.",
+                "한국어는 교착어 특성을 가져요.",
+                "컴퓨터가 사람의 언어를 이해합니다.",
+                "공백 기준 토큰화는 맥락을 보존합니다.",
+                "Gemma3 토크나이저는 검증된 성능을 제공합니다.",
+                "데이터 과학과 자연어 처리 기술이 발전하고 있습니다.",
+                "언어모델의 성능은 토크나이저에 크게 의존합니다."
+            ]
+            self.data = []
+            for i in range(1000):
+                sample_text = korean_samples[i % len(korean_samples)]
+                self.data.append({"text": f"{sample_text} 샘플 {i+1}번째 문장입니다."})
         else:
             with open(data_file, 'r', encoding='utf-8') as f:
                 for line in f:
                     if line.strip():
                         self.data.append(json.loads(line))
         
-        logger.info(f"데이터셋 로드 완료: {len(self.data)} 샘플")
+        logger.info(f"한국어 데이터셋 로드 완료: {len(self.data)} 샘플 (토크나이저: {tokenizer_type})")
+        
+    def _initialize_tokenizer(self):
+        """토크나이저 초기화"""
+        
+        if self.tokenizer_type == "korean":
+            self.tokenizer = KoreanTokenizer()
+            logger.info("🇰🇷 기본 한국어 토크나이저 사용")
+            
+        elif self.tokenizer_type == "improved_korean":
+            self.tokenizer = ImprovedKoreanTokenizer()
+            logger.info("🚀 개선된 한국어 토크나이저 사용 (공백 기준)")
+            
+        elif self.tokenizer_type == "gemma3":
+            try:
+                self.tokenizer = Gemma3TokenizerWrapper()
+                logger.info("🤖 Gemma3 토크나이저 사용")
+            except Exception as e:
+                logger.warning(f"Gemma3 토크나이저 로드 실패: {e}")
+                logger.info("기본 한국어 토크나이저로 fallback")
+                self.tokenizer = KoreanTokenizer()
+                self.tokenizer_type = "korean"
+                
+        else:
+            logger.warning(f"알 수 없는 토크나이저 타입: {self.tokenizer_type}")
+            logger.info("기본 한국어 토크나이저 사용")
+            self.tokenizer = KoreanTokenizer()
+            self.tokenizer_type = "korean"
     
     def __len__(self):
         return len(self.data)
@@ -183,20 +247,37 @@ class TextDataset(Dataset):
     def __getitem__(self, idx):
         text = self.data[idx]["text"]
         
-        # 간단한 토크나이징 (실제로는 토크나이저 사용)
-        tokens = text.split()[:self.max_length-2]  # 시작/끝 토큰 공간
-        
-        # 더미 토큰 ID (실제로는 토크나이저 사용)
-        input_ids = [1] + [hash(token) % 65535 + 1 for token in tokens] + [2]  # BOS + tokens + EOS
-        
-        # 패딩
-        if len(input_ids) < self.max_length:
-            input_ids.extend([0] * (self.max_length - len(input_ids)))
-        else:
-            input_ids = input_ids[:self.max_length]
+        # 한국어 토크나이저 사용
+        try:
+            encoded = self.tokenizer.encode(
+                text, 
+                add_special_tokens=True, 
+                max_length=self.max_length
+            )
             
-        attention_mask = [1 if token_id != 0 else 0 for token_id in input_ids]
+            input_ids = encoded["input_ids"]
+            attention_mask = encoded["attention_mask"]
+            
+        except Exception as e:
+            # 토크나이징 실패 시 기본 처리
+            logger.warning(f"토크나이징 실패: {e}, 기본 처리로 전환")
+            
+            # 기본 토큰화 (fallback)
+            tokens = text.split()[:self.max_length-2]
+            input_ids = [1] + [hash(token) % 65535 + 1 for token in tokens] + [2]
+            attention_mask = [1] * len(input_ids)
         
+        # 패딩 또는 자르기
+        if len(input_ids) < self.max_length:
+            # 패딩
+            pad_length = self.max_length - len(input_ids)
+            input_ids.extend([0] * pad_length)
+            attention_mask.extend([0] * pad_length)
+        else:
+            # 자르기
+            input_ids = input_ids[:self.max_length]
+            attention_mask = attention_mask[:self.max_length]
+            
         return {
             "input_ids": torch.tensor(input_ids, dtype=torch.long),
             "attention_mask": torch.tensor(attention_mask, dtype=torch.long),
@@ -276,7 +357,7 @@ class H100Trainer:
         """데이터 로더 초기화"""
         logger.info("데이터 로더 초기화 중...")
         
-        dataset = TextDataset(self.config.dataset_path, self.config.max_seq_length)
+        dataset = TextDataset(self.config.dataset_path, self.config.max_seq_length, self.config.tokenizer_type)
         
         # 분산 샘플러
         sampler = None
@@ -473,6 +554,11 @@ def main():
     parser.add_argument("--logs-dir", type=str, default="./logs", help="로그 디렉토리")
     parser.add_argument("--validation-split", type=float, default=0.05, help="Validation 데이터 비율")
     
+    # 토크나이저 설정
+    parser.add_argument("--tokenizer-type", type=str, default="korean", 
+                       choices=["korean", "improved_korean", "gemma3"],
+                       help="토크나이저 타입 선택")
+    
     # Early Stopping 설정
     parser.add_argument("--early-stopping", action="store_true", help="Early stopping 활성화")
     parser.add_argument("--patience", type=int, default=3, help="Validation loss 증가 허용 횟수")
@@ -507,7 +593,8 @@ def main():
         max_seq_length=args.max_seq_length,
         save_steps=args.save_steps,
         compile_model=not args.no_compile,
-        mixed_precision=args.mixed_precision
+        mixed_precision=args.mixed_precision,
+        tokenizer_type=args.tokenizer_type
     )
     
     # 추가된 인수들 처리 (로깅)
@@ -517,6 +604,14 @@ def main():
         logger.info(f"Early Stopping 활성화: patience={args.patience}, min_delta={args.min_delta}")
     if hasattr(args, 'smart_monitoring') and args.smart_monitoring:
         logger.info("지능형 모니터링 활성화")
+    
+    # 토크나이저 타입 로깅
+    tokenizer_names = {
+        "korean": "🇰🇷 기본 한국어 토크나이저",
+        "improved_korean": "🚀 개선된 한국어 토크나이저 (공백 기준)",
+        "gemma3": "🤖 Gemma3 토크나이저"
+    }
+    logger.info(f"선택된 토크나이저: {tokenizer_names.get(args.tokenizer_type, args.tokenizer_type)}")
     
     # GPU 정보 출력
     if torch.cuda.is_available():

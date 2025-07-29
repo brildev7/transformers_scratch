@@ -32,6 +32,9 @@ MAX_STEPS=10
 NUM_GPUS=2
 SAVE_STEPS=500
 
+# 토크나이저 설정 (기본값: gemma3)
+TOKENIZER_TYPE="gemma3"  # gemma3 (기본값), improved_korean, korean
+
 # 실행 설정
 BACKGROUND=true  # 기본 백그라운드 실행
 SAVE_INITIAL=true  # 초기 모델 저장
@@ -47,6 +50,7 @@ print_banner() {
     echo "     한국어 sLLM H100 듀얼 GPU 학습 실행기"
     echo "     Korean sLLM H100 Dual GPU Training Launcher"
     echo "     🚀 H100 최적화 + 분산 학습 지원"
+    echo "     🤖 Gemma3 토크나이저 기본값 (gemma3/improved_korean/korean)"
     echo "========================================================"
     echo -e "${NC}"
 }
@@ -72,6 +76,12 @@ print_help() {
     echo "  --max-seq-length N   최대 시퀀스 길이 (기본값: 2048)"
     echo "  --save-steps N       모델 저장 간격 (기본값: 500)"
     echo ""
+    echo "🇰🇷 토크나이저 설정:"
+    echo "  --tokenizer-type TYPE 토크나이저 타입 선택 (기본값: gemma3)"
+    echo "                       • gemma3: Gemma3 토크나이저 (기본값, Google 검증)"
+    echo "                       • improved_korean: 개선된 토크나이저 (공백 기준)"
+    echo "                       • korean: 기본 한국어 토크나이저 (형태소 분석)"
+    echo ""
     echo "🚀 H100 최적화:"
     echo "  --fp16               FP16 mixed precision 사용"
     echo "  --fp32               FP32 precision 사용"
@@ -85,10 +95,12 @@ print_help() {
     echo "  --no-save-initial    초기 모델 저장 비활성화"
     echo ""
     echo "예시:"
-    echo "  $0 --test                           # 테스트 모드 (기본)"
+    echo "  $0 --test                           # 테스트 모드 (기본, Gemma3)"
     echo "  $0 --test --max-steps 20            # 20스텝 테스트"
     echo "  $0 --train --batch-size 8           # 실제 학습"
     echo "  $0 --train --dataset-path ./data    # 커스텀 데이터 경로"
+    echo "  $0 --train --tokenizer-type improved_korean  # 개선된 토크나이저"
+    echo "  $0 --test --tokenizer-type korean   # 기본 한국어 토크나이저"
     echo "  $0 --dry-run                        # 명령어만 확인"
     echo ""
     echo "🎯 H100 최적화 기능:"
@@ -97,6 +109,7 @@ print_help() {
     echo "  • Flash Attention 지원"
     echo "  • Distributed Data Parallel (DDP)"
     echo "  • Gradient Accumulation"
+    echo "  • 다중 토크나이저 지원 (한국어 최적화)"
     echo ""
 }
 
@@ -169,6 +182,34 @@ for i in range(torch.cuda.device_count()):
         requirements_met=false
     fi
     
+    # 토크나이저 유효성 검사 (새로 추가)
+    case $TOKENIZER_TYPE in
+        "gemma3"|"improved_korean"|"korean")
+            echo -e "${GREEN}✅ 토크나이저 타입 확인: $TOKENIZER_TYPE${NC}"
+            ;;
+        *)
+            echo -e "${RED}❌ 지원하지 않는 토크나이저 타입: $TOKENIZER_TYPE${NC}"
+            echo "지원 토크나이저: gemma3 (기본값), improved_korean, korean"
+            requirements_met=false
+            ;;
+    esac
+    
+    # 토크나이저 파일 존재 확인
+    if [ "$TOKENIZER_TYPE" = "gemma3" ] && [ ! -f "$SCRIPT_DIR/gemma3_tokenizer.py" ]; then
+        echo -e "${RED}❌ Gemma3 토크나이저 파일이 없습니다: gemma3_tokenizer.py${NC}"
+        requirements_met=false
+    fi
+    
+    if [ "$TOKENIZER_TYPE" = "improved_korean" ] && [ ! -f "$SCRIPT_DIR/improved_korean_tokenizer.py" ]; then
+        echo -e "${RED}❌ 개선된 토크나이저 파일이 없습니다: improved_korean_tokenizer.py${NC}"
+        requirements_met=false
+    fi
+    
+    if [ "$TOKENIZER_TYPE" = "korean" ] && [ ! -f "$SCRIPT_DIR/korean_tokenizer.py" ]; then
+        echo -e "${RED}❌ 기본 토크나이저 파일이 없습니다: korean_tokenizer.py${NC}"
+        requirements_met=false
+    fi
+    
     if [ "$requirements_met" = true ]; then
         echo -e "${GREEN}✅ 모든 요구사항 충족${NC}"
         return 0
@@ -208,6 +249,9 @@ build_training_command() {
     cmd="$cmd --max-seq-length $MAX_SEQ_LENGTH"
     cmd="$cmd --save-steps $SAVE_STEPS"
     
+    # 토크나이저 설정 (새로 추가)
+    cmd="$cmd --tokenizer-type $TOKENIZER_TYPE"
+    
     # H100 최적화
     cmd="$cmd --mixed-precision $MIXED_PRECISION"
     
@@ -239,6 +283,25 @@ print_training_info() {
     echo "   • 최대 시퀀스 길이: $MAX_SEQ_LENGTH"
     echo "   • Mixed Precision: $MIXED_PRECISION"
     echo "   • 모델 컴파일: $COMPILE_MODEL"
+    echo ""
+    echo -e "🇰🇷 토크나이저 설정:"
+    case $TOKENIZER_TYPE in
+        "gemma3")
+            echo "   • 타입: Gemma3 토크나이저 🏆 기본값"
+            echo "   • 특징: Google 검증, 다국어 지원, 고성능"
+            ;;
+        "improved_korean")
+            echo "   • 타입: 개선된 한국어 토크나이저"
+            echo "   • 특징: 공백 기준, 맥락 보존, Subword 지원"
+            ;;
+        "korean")
+            echo "   • 타입: 기본 한국어 토크나이저"
+            echo "   • 특징: 형태소 분석 기반, 조사/어미 분리"
+            ;;
+        *)
+            echo "   • 타입: $TOKENIZER_TYPE (사용자 정의)"
+            ;;
+    esac
     
     echo -e "📁 경로:"
     echo "   • 데이터셋: $DATASET_PATH"
@@ -348,10 +411,13 @@ execute_training() {
         echo -e "\n${YELLOW}🚀 다음 단계:${NC}"
         echo "1. 체크포인트 확인: ls -la $OUTPUT_DIR/checkpoint-*"
         echo "2. 로그 확인: tail -f $OUTPUT_DIR/*.log"
+        echo "3. 토크나이저 가이드: cat TOKENIZER_GUIDE.md"
         if [ "$MODE" = "test" ]; then
-            echo "3. 실제 학습: $0 --train"
+            echo "4. 실제 학습: $0 --train --tokenizer-type $TOKENIZER_TYPE"
+            echo "5. 토크나이저 변경: $0 --train --tokenizer-type improved_korean"
         else
-            echo "3. 추론 테스트: python3 inference.py --model-path $OUTPUT_DIR/checkpoint-XXX"
+            echo "4. 추론 테스트: cd ../inference && python3 console_app.py --checkpoint $OUTPUT_DIR/checkpoint-XXX"
+            echo "5. 토크나이저 매칭: 추론 시 같은 토크나이저 타입 사용 권장"
         fi
         
     else
@@ -408,6 +474,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --save-steps)
             SAVE_STEPS="$2"
+            shift 2
+            ;;
+        --tokenizer-type)
+            TOKENIZER_TYPE="$2"
             shift 2
             ;;
         --fp16)
